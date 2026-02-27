@@ -1,34 +1,47 @@
 # Coffee Shop RAG System
 
-Sistem RAG (Retrieval-Augmented Generation) sederhana untuk rekomendasi coffee shop di Yogyakarta menggunakan Groq API.
+Sistem RAG (Retrieval-Augmented Generation) untuk rekomendasi coffee shop di Yogyakarta berbasis data Instagram menggunakan ChromaDB dan Groq API.
 
-## 📋 Deskripsi
+## Deskripsi
 
-Project ini menggunakan ChromaDB sebagai vector store dan Groq API untuk fast inference. Sistem ini mengambil data coffee shop dari Instagram, membuat knowledge base, dan memberikan rekomendasi berdasarkan query pengguna.
+Sistem ini dibangun melalui serangkaian tahap pemrosesan data, mulai dari pengumpulan data Instagram, pembersihan teks, pemodelan topik, ekstraksi informasi dengan LLM, hingga penyimpanan ke knowledge base berbasis vektor untuk keperluan retrieval dan generasi jawaban.
 
-## 📂 Struktur Project
+### Alur Pipeline
+
+1. **Pengumpulan Data** - Data caption Instagram coffee shop di Yogyakarta dikumpulkan menggunakan Instagrapi.
+
+2. **Preprocessing & Pemodelan Topik (LDA)** - Caption dibersihkan dari spam, noise, dan stopword, lalu dimodelkan menggunakan Latent Dirichlet Allocation (LDA) dengan 4 topik. Setiap caption diberi label dominan (single-label) maupun label multi (multi-label) berdasarkan distribusi probabilitas topik. Label topik yang digunakan: Menu Variatif, Ngopi Santai, Area Lengkap, dan WFC Nyaman.
+
+3. **Ekstraksi Informasi dengan LLM** - Setiap caption diproses menggunakan model Gemma 2 9B CPT Sahabatai Instruct (`GoToCompany/gemma2-9b-cpt-sahabatai-v1-instruct`) melalui platform modal.com untuk mengekstrak dua komponen: deskripsi (informasi faktual tempat, menu, atau jam operasional) dan opini (penilaian eksplisit maupun implisit terhadap tempat, menu, atau suasana).
+
+4. **Pembangunan Knowledge Base** - Hasil ekstraksi disusun menjadi dokumen terstruktur, lalu dikonversi menjadi vector embeddings menggunakan `intfloat/multilingual-e5-large` dan disimpan ke ChromaDB secara persisten.
+
+5. **Retrieval & Generasi Jawaban** - Sistem menerima query pengguna, mencari dokumen relevan dari ChromaDB, lalu menghasilkan jawaban menggunakan Groq API (model `llama-3.3-70b-versatile`).
+
+## Struktur Project
 
 ```
 RAG/
 ├── data/
-│   ├── raw/              # Data mentah dari scraping
-│   ├── processed/        # Data yang sudah diproses
-│   └── vector_store/     # ChromaDB vector database
+│   ├── processed/        # Data hasil preprocessing dan kategorisasi LDA
+│   └── vector_store/     # ChromaDB vector database (di-ignore git)
 ├── src/
 │   ├── __init__.py
-│   ├── ingest.py         # Data loading & processing
-│   ├── embed.py          # Embedding logic
-│   ├── retriever.py      # Document retrieval
-│   └── generator.py      # LLM generation (Groq)
+│   ├── ingest.py         # Load & persiapan dokumen dari CSV
+│   ├── embed.py          # Embedding menggunakan sentence-transformers
+│   ├── retriever.py      # Pencarian dokumen relevan dari ChromaDB
+│   └── generator.py      # Generasi jawaban menggunakan Groq API
 ├── config/
-│   └── settings.py       # Konfigurasi sistem
-├── archive/              # File lama (notebooks, tests)
-├── app.py                # Main application
+│   └── settings.py       # Konfigurasi model, path, dan parameter sistem
+├── archive/              # Notebook eksplorasi dan kode lama
+├── app.py                # Entry point aplikasi
+├── reingest.py           # Script untuk rebuild vector store
 ├── requirements.txt
+├── .env                  # API key (tidak di-track git)
 └── README.md
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Install Dependencies
 
@@ -38,7 +51,13 @@ pip install -r requirements.txt
 
 ### 2. Set Groq API Key
 
-Dapatkan API key dari: https://console.groq.com/
+Dapatkan API key dari https://console.groq.com/, lalu buat file `.env` di root project:
+
+```
+GROQ_API_KEY=your_api_key_here
+```
+
+Atau set secara manual di terminal:
 
 **Windows PowerShell:**
 ```powershell
@@ -55,13 +74,13 @@ set GROQ_API_KEY=your_api_key_here
 export GROQ_API_KEY="your_api_key_here"
 ```
 
-### 3. Run Application
+### 3. Jalankan Aplikasi
 
 ```bash
 python app.py
 ```
 
-## 💡 Cara Menggunakan
+## Cara Menggunakan
 
 ### Sebagai Script
 
@@ -74,17 +93,12 @@ python app.py
 ```python
 from app import RAGApp
 
-# Initialize
 app = RAGApp()
-
-# Query
 response = app.query("Rekomendasikan coffee shop untuk bekerja")
-
-# Print response
 app.print_response(response)
 ```
 
-### Response Format
+### Format Response
 
 ```python
 {
@@ -96,52 +110,46 @@ app.print_response(response)
 }
 ```
 
-## ⚙️ Konfigurasi
+## Konfigurasi
 
-Edit [config/settings.py](config/settings.py) untuk mengubah:
-- Embedding model
-- Groq model
-- Jumlah dokumen yang di-retrieve (TOP_K)
+Edit `config/settings.py` untuk mengubah:
+- Embedding model (default: `intfloat/multilingual-e5-large`)
+- Groq model (default: `llama-3.3-70b-versatile`)
+- Jumlah dokumen yang di-retrieve (`TOP_K_RESULTS`)
 - Temperature dan max tokens
-- System prompt
+- System prompt dan prompt template
 
-## 📊 Data
+## Komponen
 
-- **Raw data**: [data/raw/extracted_data_sahabatai.csv](data/raw/extracted_data_sahabatai.csv)
-- **Processed data**: [data/processed/](data/processed/)
-- **Vector store**: [data/vector_store/chroma_db/](data/vector_store/chroma_db/)
+### `src/embed.py`
+Mengelola embedding teks menggunakan `intfloat/multilingual-e5-large` via sentence-transformers dengan format passage/query.
 
-## 🔧 Komponen
+### `src/retriever.py`
+Mengambil dokumen paling relevan dari ChromaDB berdasarkan similarity search, lalu memformat context untuk dikirim ke LLM.
 
-### 1. Embedding (`src/embed.py`)
-- Model: BAAI/bge-m3
-- Mengkonversi text menjadi vector embeddings
+### `src/generator.py`
+Mengirim context dan query ke Groq API menggunakan model `llama-3.3-70b-versatile` untuk menghasilkan jawaban.
 
-### 2. Retriever (`src/retriever.py`)
-- Mengambil dokumen relevan dari ChromaDB
-- Format context untuk LLM
+### `src/ingest.py`
+Memuat data dari CSV hasil preprocessing, menyusun dokumen terstruktur, dan menyimpannya ke ChromaDB.
 
-### 3. Generator (`src/generator.py`)
-- Menggunakan Groq API (llama-3.1-70b-versatile)
-- Generate response berdasarkan context
+### `reingest.py`
+Script untuk melakukan rebuild ulang vector store dari data terbaru jika terdapat perubahan pada data processed.
 
-### 4. Ingest (`src/ingest.py`)
-- Load dan process data CSV
-- Prepare documents untuk vector store
-
-## 📝 Contoh Query
+## Contoh Query
 
 - "Rekomendasikan coffee shop yang nyaman untuk bekerja"
 - "Ada tempat kopi dengan area outdoor di Sleman?"
 - "Coffee shop dengan menu variatif dan harga terjangkau"
 - "Tempat kopi yang cocok untuk meeting"
 
-## 🗂️ Archive
+## Archive
 
-File lama (notebooks, tests, CLI) dipindahkan ke folder [archive/](archive/) untuk menjaga struktur tetap simpel.
+Notebook eksplorasi (EDA, preprocessing, LDA, knowledge base) dan kode scraping Instagrapi tersimpan di folder `archive/`.
 
-## ⚠️ Notes
+## Catatan
 
-- Sistem ini menggunakan pre-built ChromaDB. Untuk rebuild, gunakan notebooks di archive
-- Groq API gratis dengan rate limit - cek https://console.groq.com/
-- Embedding model (bge-m3) akan di-download otomatis saat pertama kali dijalankan
+- Sistem menggunakan ChromaDB yang sudah dibangun sebelumnya. Untuk rebuild, jalankan `reingest.py` atau gunakan notebook di `archive/notebooks/`.
+- Groq API tersedia secara gratis dengan rate limit. Cek status di https://console.groq.com/.
+- Model embedding `intfloat/multilingual-e5-large` akan diunduh otomatis saat pertama kali dijalankan.
+- Folder `data/vector_store/` dan file `.env` tidak di-track git.
