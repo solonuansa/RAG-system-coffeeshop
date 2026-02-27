@@ -37,7 +37,7 @@ RAG/
 ├── app.py                # Entry point aplikasi
 ├── reingest.py           # Script untuk rebuild vector store
 ├── requirements.txt
-├── .env                  # API key (tidak di-track git)
+├── .env                  # API key 
 └── README.md
 ```
 
