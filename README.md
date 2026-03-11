@@ -8,7 +8,7 @@ Sistem tanya-jawab dan rekomendasi coffee shop berbasis RAG (Retrieval-Augmented
 
 ## Web UI Preview
 
-![Home](docs/assets/web-ui/01-home.png)
+![Home](docs/assets/web-ui/rag-coffeeshop.png)
 
 ## Apa yang Diselesaikan Proyek Ini
 
