@@ -1,8 +1,8 @@
 import logging
 from typing import Any, Dict, List
 
-from src.generator import Generator
-from src.retriever import Retriever
+from backend.src.generator import Generator
+from backend.src.retriever import Retriever
 
 logger = logging.getLogger(__name__)
 

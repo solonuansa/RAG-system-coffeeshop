@@ -43,5 +43,5 @@ data/vector_store/
 **/chroma_db/
 
 # Instagrapi session (can contain auth cookies/tokens)
-archive/instagrapi/session.json
-archive/instagrapi/account_manager.py
+experiments/instagrapi/session.json
+experiments/instagrapi/account_manager.py

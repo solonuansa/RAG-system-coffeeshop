@@ -2,10 +2,9 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
-
 # Path
-BASE_DIR = Path(__file__).parent.parent
+BASE_DIR = Path(__file__).resolve().parents[2]
+load_dotenv(BASE_DIR / ".env")
 DATA_DIR = BASE_DIR / "data"
 PROCESSED_DATA_DIR = DATA_DIR / "processed"
 RAW_DATA_DIR = DATA_DIR / "raw"

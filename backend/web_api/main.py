@@ -7,14 +7,14 @@ from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from config.settings import (
+from backend.config.settings import (
     ALLOWED_ORIGINS,
     API_ACCESS_TOKEN,
     DAILY_REQUEST_LIMIT_PER_IP,
     RATE_LIMIT_PER_MINUTE,
 )
-from src.rag_service import RAGService
-from web_api.security import InMemoryUsageGuard
+from backend.src.rag_service import RAGService
+from backend.web_api.security import InMemoryUsageGuard
 
 logging.basicConfig(
     level=logging.INFO,

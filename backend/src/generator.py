@@ -3,7 +3,7 @@ import logging
 from groq import Groq
 from groq import APIError, RateLimitError
 from typing import Optional
-from config.settings import GROQ_API_KEY, GROQ_MODEL, MAX_TOKENS, TEMPERATURE, SYSTEM_PROMPT, API_TIMEOUT, MAX_RETRIES, RETRY_DELAY, CONTEXT_PROMPT_TEMPLATE
+from backend.config.settings import GROQ_API_KEY, GROQ_MODEL, MAX_TOKENS, TEMPERATURE, SYSTEM_PROMPT, API_TIMEOUT, MAX_RETRIES, RETRY_DELAY, CONTEXT_PROMPT_TEMPLATE
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)

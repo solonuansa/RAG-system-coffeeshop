@@ -1,7 +1,13 @@
 import shutil
+import sys
 from pathlib import Path
-from src.ingest import DataIngestor
-from config.settings import VECTOR_STORE_DIR, PROCESSED_DATA_DIR
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+from backend.src.ingest import DataIngestor
+from backend.config.settings import VECTOR_STORE_DIR, PROCESSED_DATA_DIR
 
 
 def reingest_data():

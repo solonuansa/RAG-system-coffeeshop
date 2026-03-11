@@ -1,7 +1,7 @@
 import logging
 from langchain_community.vectorstores import Chroma
-from src.embed import EmbeddingModel
-from config.settings import VECTOR_STORE_DIR, EMBEDDING_MODEL, TOP_K_RESULTS, EMBEDDING_BATCH_SIZE, SCORE_THRESHOLD
+from backend.src.embed import EmbeddingModel
+from backend.config.settings import VECTOR_STORE_DIR, EMBEDDING_MODEL, TOP_K_RESULTS, EMBEDDING_BATCH_SIZE, SCORE_THRESHOLD
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ class Retriever:
         if not VECTOR_STORE_DIR.exists():
             raise FileNotFoundError(
                 f"Vector store tidak ditemukan di {VECTOR_STORE_DIR}. "
-                "Jalankan 'python reingest.py' terlebih dahulu untuk membuat vector store."
+                "Jalankan 'python scripts/reingest.py' terlebih dahulu untuk membuat vector store."
             )
         
         # Load embedding model
@@ -32,7 +32,7 @@ class Retriever:
             )
             doc_count = self.vectorstore._collection.count()
             if doc_count == 0:
-                raise ValueError("Vector store kosong. Jalankan 'python reingest.py' untuk mengisi data.")
+                raise ValueError("Vector store kosong. Jalankan 'python scripts/reingest.py' untuk mengisi data.")
             print(f"Vector store berhasil dimuat ({doc_count} dokumen)")
         except Exception as e:
             raise RuntimeError(f"Gagal memuat vector store: {str(e)}")

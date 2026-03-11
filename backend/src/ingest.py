@@ -5,8 +5,8 @@ from pathlib import Path
 from typing import List
 from langchain_core.documents import Document
 from langchain_chroma import Chroma
-from src.embed import EmbeddingModel
-from config.settings import VECTOR_STORE_DIR, EMBEDDING_MODEL, PROCESSED_DATA_DIR, EMBEDDING_BATCH_SIZE, INGEST_BATCH_SIZE
+from backend.src.embed import EmbeddingModel
+from backend.config.settings import VECTOR_STORE_DIR, EMBEDDING_MODEL, PROCESSED_DATA_DIR, EMBEDDING_BATCH_SIZE, INGEST_BATCH_SIZE
 
 logger = logging.getLogger(__name__)
 

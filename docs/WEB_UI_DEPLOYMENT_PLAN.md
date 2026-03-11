@@ -1,4 +1,4 @@
-# Web UI and Deployment Plan - Next.js + FastAPI
+﻿# Web UI and Deployment Plan - Next.js + FastAPI
 
 ## 1. Tujuan
 - Menjalankan UI chat production-ready di Vercel.
@@ -8,7 +8,7 @@
 ## 2. Arsitektur Deploy (Current)
 - Frontend: `Next.js` di Vercel.
 - Frontend route server-side: `frontend/app/api/chat/route.ts` (proxy ke backend).
-- Backend: `FastAPI` (`web_api/main.py`) di Render/Railway/Fly (recommended non-serverless).
+- Backend: `FastAPI` (`backend/web_api/main.py`) di Render/Railway/Fly (recommended non-serverless).
 - Vector store: `ChromaDB` persisted volume di backend platform.
 
 Flow:
@@ -18,7 +18,7 @@ Flow:
 4. FastAPI panggil RAG pipeline -> return answer+sumber.
 
 ## 3. Status Implementasi
-- [x] Phase 1: FastAPI API layer + service abstraction (`src/rag_service.py`)
+- [x] Phase 1: FastAPI API layer + service abstraction (`backend/src/rag_service.py`)
 - [x] Phase 2: Next.js app setup + chat UI + API proxy route
 - [x] Security baseline:
   - optional bearer token (`API_ACCESS_TOKEN`)
@@ -51,7 +51,7 @@ Catatan:
 2. Buat service backend di Render/Railway/Fly.
 3. Set build/start command:
    - build: `pip install -r requirements.txt`
-   - start: `uvicorn web_api.main:app --host 0.0.0.0 --port $PORT`
+   - start: `uvicorn backend.web_api.main:app --host 0.0.0.0 --port $PORT`
 4. Mount persistent volume untuk `data/vector_store/chroma_db`.
 5. Set semua env backend (lihat section 4).
 6. Verify:
@@ -114,3 +114,4 @@ Catatan:
 - Kombinasi yang dipakai:
   - Frontend: Vercel
   - Backend: Render/Railway/Fly (recommended)
+

@@ -1,4 +1,4 @@
-# Dokumentasi Kode Sistem RAG Coffee Shop
+﻿# Dokumentasi Kode Sistem RAG Coffee Shop
 
 ## Table of Contents
 - [Overview Sistem](#overview-sistem)
@@ -231,7 +231,7 @@ from typing import List
 - Memungkinkan kita mendeklarasikan tipe data untuk improve readability dan type checking
 
 ```python
-from config.settings import EMBEDDING_MODEL
+from backend.config.settings import EMBEDDING_MODEL
 ```
 - Mengimpor konstanta EMBEDDING_MODEL dari config/settings.py
 - Menghindari hardcoding nama model di dalam kode
@@ -280,7 +280,7 @@ class EmbeddingModel:
 - Model disimpan di `self.model` agar bisa diakses di method lain
 
 ```python
-        print("✓ Model embedding berhasil dimuat")
+        print("âœ“ Model embedding berhasil dimuat")
 ```
 - Menampilkan konfirmasi bahwa model berhasil dimuat
 
@@ -353,7 +353,7 @@ import re
 ```python
 import logging
 ```
-- Mengimpor logging untuk output信息和error
+- Mengimpor logging untuk outputä¿¡æ¯å’Œerror
 
 ```python
 import pandas as pd
@@ -384,13 +384,13 @@ from langchain_chroma import Chroma
 - Chroma adalah vector database yang integrated dengan LangChain
 
 ```python
-from src.embed import EmbeddingModel
+from backend.src.embed import EmbeddingModel
 ```
 - Mengimpor EmbeddingModel class dari local file src/embed.py
 - Used untuk create embeddings dari teks
 
 ```python
-from config.settings import VECTOR_STORE_DIR, EMBEDDING_MODEL, PROCESSED_DATA_DIR, EMBEDDING_BATCH_SIZE, INGEST_BATCH_SIZE
+from backend.config.settings import VECTOR_STORE_DIR, EMBEDDING_MODEL, PROCESSED_DATA_DIR, EMBEDDING_BATCH_SIZE, INGEST_BATCH_SIZE
 ```
 - Mengimpor semua konfigurasi yang diperlukan dari settings
 - Menghindari hardcoding values
@@ -541,13 +541,13 @@ class DataIngestor:
 - Use regex untuk mengganti multiple whitespace dengan single space
 - `r"\s+"`: Regex pattern untuk one or more whitespace characters (space, tab, newline)
 - `re.sub(pattern, replacement, text)`: Replace semua matches dengan replacement
-- Contoh: "Hello   world\n  test" → "Hello world test"
+- Contoh: "Hello   world\n  test" â†’ "Hello world test"
 
 ```python
         return text.strip()
 ```
 - Menghapus whitespace di awal dan akhir string
-- Contoh: "  hello world  " → "hello world"
+- Contoh: "  hello world  " â†’ "hello world"
 
 ```python
     def _build_content(self, row: pd.Series) -> str:
@@ -623,7 +623,7 @@ Opini:
 - df sekarang berisi semua data dari CSV
 
 ```python
-        print(f"✓ Berhasil memuat {len(df)} baris data")
+        print(f"âœ“ Berhasil memuat {len(df)} baris data")
         print()
 ```
 - Menampilkan jumlah baris data yang berhasil dimuat
@@ -643,7 +643,7 @@ Opini:
 - Iterate setiap column di required_columns
 - Cek apakah column TIDAK ada di df.columns
 - Jika missing, tambahkan ke missing_columns list
-- Contoh: jika hanya 'deskripsi' yang missing → missing_columns = ['deskripsi']
+- Contoh: jika hanya 'deskripsi' yang missing â†’ missing_columns = ['deskripsi']
 
 ```python
         if missing_columns:
@@ -672,11 +672,11 @@ Opini:
 ```
 - Rename kolom ke nama yang lebih clean dan consistent
 - Mapping:
-  - 'Kota' → 'lokasi'
-  - 'Akun Instagram' → 'source'
-  - 'Kategori Tempat' → 'kategori'
-  - 'deskripsi' → 'deskripsi' (no change)
-  - 'opini' → 'opini' (no change)
+  - 'Kota' â†’ 'lokasi'
+  - 'Akun Instagram' â†’ 'source'
+  - 'Kategori Tempat' â†’ 'kategori'
+  - 'deskripsi' â†’ 'deskripsi' (no change)
+  - 'opini' â†’ 'opini' (no change)
 
 ```python
         # Tambahkan ID
@@ -684,7 +684,7 @@ Opini:
 ```
 - `df.insert(0, 'id', ...)`: Insert kolom baru di position 0 (paling kiri)
 - Nama kolom: 'id'
-- Values: range(1, 1 + len(df)) → [1, 2, 3, ..., n]
+- Values: range(1, 1 + len(df)) â†’ [1, 2, 3, ..., n]
 - Setiap baris sekarang punya unique ID dari 1 sampai n
 - ini berguna untuk tracking dan referencing
 
@@ -817,12 +817,12 @@ from langchain_community.vectorstores import Chroma
 - Ini adalah integrasi LangChain dengan Chroma database
 
 ```python
-from src.embed import EmbeddingModel
+from backend.src.embed import EmbeddingModel
 ```
 - Mengimpor EmbeddingModel untuk generate embeddings dari query
 
 ```python
-from config.settings import VECTOR_STORE_DIR, EMBEDDING_MODEL, TOP_K_RESULTS, EMBEDDING_BATCH_SIZE, SCORE_THRESHOLD
+from backend.config.settings import VECTOR_STORE_DIR, EMBEDDING_MODEL, TOP_K_RESULTS, EMBEDDING_BATCH_SIZE, SCORE_THRESHOLD
 ```
 - Mengimpor konfigurasi yang dibutuhkan
 
@@ -853,7 +853,7 @@ class Retriever:
         if not VECTOR_STORE_DIR.exists():
             raise FileNotFoundError(
                 f"Vector store tidak ditemukan di {VECTOR_STORE_DIR}. "
-                "Jalankan 'python reingest.py' terlebih dahulu untuk membuat vector store."
+                "Jalankan 'python scripts/reingest.py' terlebih dahulu untuk membuat vector store."
             )
 ```
 - Cek apakah vector store directory exists
@@ -899,7 +899,7 @@ class Retriever:
 
 ```python
             if doc_count == 0:
-                raise ValueError("Vector store kosong. Jalankan 'python reingest.py' untuk mengisi data.")
+                raise ValueError("Vector store kosong. Jalankan 'python scripts/reingest.py' untuk mengisi data.")
 ```
 - Cek apakah database kosong
 - Jika kosong, raise ValueError dengan instruction
@@ -1204,7 +1204,7 @@ from typing import Optional
 - Mengimpor Optional untuk type hints
 
 ```python
-from config.settings import GROQ_API_KEY, GROQ_MODEL, MAX_TOKENS, TEMPERATURE, SYSTEM_PROMPT, API_TIMEOUT, MAX_RETRIES, RETRY_DELAY, CONTEXT_PROMPT_TEMPLATE
+from backend.config.settings import GROQ_API_KEY, GROQ_MODEL, MAX_TOKENS, TEMPERATURE, SYSTEM_PROMPT, API_TIMEOUT, MAX_RETRIES, RETRY_DELAY, CONTEXT_PROMPT_TEMPLATE
 ```
 - Mengimpor semua konfigurasi yang dibutuhkan
 
@@ -1296,8 +1296,8 @@ class Generator:
 ```
 - Format user message menggunakan template
 - `.format()`: Replace placeholders dengan actual values
-- `{context}` → context string dari retriever
-- `{query}` → user question
+- `{context}` â†’ context string dari retriever
+- `{query}` â†’ user question
 - Template sudah di-define di settings.py
 
 ```python
@@ -1370,9 +1370,9 @@ class Generator:
 ```
 - Calculate wait time menggunakan exponential backoff
 - `2 ** attempt`: 2 pangkat attempt number
-  - Attempt 0: 2^0 = 1 → 2 * 1 = 2 detik
-  - Attempt 1: 2^1 = 2 → 2 * 2 = 4 detik
-  - Attempt 2: 2^2 = 4 → 2 * 4 = 8 detik
+  - Attempt 0: 2^0 = 1 â†’ 2 * 1 = 2 detik
+  - Attempt 1: 2^1 = 2 â†’ 2 * 2 = 4 detik
+  - Attempt 2: 2^2 = 4 â†’ 2 * 4 = 8 detik
 - Exponential backoff membagi beban ke server saat error
 
 ```python
@@ -1535,12 +1535,12 @@ from pathlib import Path
 - Mengimpor Path untuk file operations
 
 ```python
-from src.ingest import DataIngestor
+from backend.src.ingest import DataIngestor
 ```
 - Mengimpor DataIngestor class untuk melakukan ingest
 
 ```python
-from config.settings import VECTOR_STORE_DIR, PROCESSED_DATA_DIR
+from backend.config.settings import VECTOR_STORE_DIR, PROCESSED_DATA_DIR
 ```
 - Mengimpat paths yang dibutuhkan dari settings
 
@@ -1584,7 +1584,7 @@ def reingest_data():
 - Membuat clean slate untuk fresh ingest
 
 ```python
-        print("✓ Vector store lama berhasil dihapus")
+        print("âœ“ Vector store lama berhasil dihapus")
         print()
 ```
 - Print konfirmasi dan spacing
@@ -1599,7 +1599,7 @@ def reingest_data():
 
 ```python
     if not csv_path.exists():
-        print(f"❌ File tidak ditemukan: {csv_path}")
+        print(f"âŒ File tidak ditemukan: {csv_path}")
         return
 ```
 - Validate CSV file exists
@@ -1637,14 +1637,14 @@ def reingest_data():
 ```python
         print()
         print("=" * 60)
-        print("✓ Ingest selesai!")
+        print("âœ“ Ingest selesai!")
         print("=" * 60)
 ```
 - Print konfirmasi sukses dengan separator line
 
 ```python
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"âŒ Error: {e}")
 ```
 - Catch any exception
 - Print error message
@@ -1658,7 +1658,7 @@ if __name__ == "__main__":
 - `__name__ == "__main__"`: True jika script dijalankan langsung
 - False jika di-import sebagai module
 - Ini memungkinkan script di-import tanpa auto-run
-- Cara run: `python reingest.py`
+- Cara run: `python scripts/reingest.py`
 
 ---
 
@@ -1692,12 +1692,12 @@ import logging
 - Mengimpor logging untuk messages dan error tracking
 
 ```python
-from src.retriever import Retriever
+from backend.src.retriever import Retriever
 ```
 - Mengimpor Retriever class untuk dokumen retrieval
 
 ```python
-from src.generator import Generator
+from backend.src.generator import Generator
 ```
 - Mengimpor Generator class untuk generate response
 
@@ -2148,7 +2148,7 @@ if __name__ == "__main__":
     main()
 ```
 - Entry point saat script dijalankan langsung
-- `python app.py` akan menjalankan main()
+- `python scripts/cli.py` akan menjalankan main()
 - Jika di-import sebagai module, main() tidak akan dijalankan
 - Standard Python pattern
 
@@ -2172,7 +2172,7 @@ if __name__ == "__main__":
 
 ### Flow Query
 ```
-1. User input → question
+1. User input â†’ question
 2. Validate input (not empty, not too long)
 3. app.query(question):
    a. retriever.retrieve(question)
@@ -2195,8 +2195,8 @@ if __name__ == "__main__":
 ### Flow Exit
 ```
 User types "exit" or "quit"
-→ Break loop
-→ Program ends
+â†’ Break loop
+â†’ Program ends
 ```
 
 ---
@@ -2209,3 +2209,4 @@ User types "exit" or "quit"
 4. **Input Validation**: User input di-sanitize (length check, empty check)
 5. **Logging**: Comprehensive logging untuk debugging dan monitoring
 6. **Modularity**: Setiap komponen terpisah dengan clear responsibilities
+

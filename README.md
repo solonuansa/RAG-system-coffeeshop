@@ -1,50 +1,43 @@
-# Coffee Shop RAG System
+﻿# Coffee Shop RAG System
 
 Sistem RAG (Retrieval-Augmented Generation) untuk rekomendasi coffee shop di Yogyakarta berbasis data Instagram, ChromaDB, dan Groq API.
 
-## Arsitektur Saat Ini
-
-- `frontend/`: Next.js (React + TypeScript) untuk UI chat.
-- `web_api/`: FastAPI backend untuk endpoint RAG.
-- `src/`: core pipeline RAG (retrieval + generation + service layer).
-- `data/vector_store/chroma_db`: persistent vector store ChromaDB.
-
-Alur request:
-1. User kirim pertanyaan dari UI Next.js.
-2. Next.js route `/api/chat` meneruskan request ke FastAPI (server-to-server).
-3. FastAPI melakukan retrieval dari ChromaDB dan generation via Groq.
-4. Jawaban + sumber dikembalikan ke UI.
-
-## Struktur Project
+## Struktur Proyek
 
 ```text
 RAG/
-  frontend/                 # Next.js app (UI chat)
+  backend/
+    config/
+      settings.py
+    src/
+      rag_service.py
+      retriever.py
+      generator.py
+      embed.py
+      ingest.py
+    web_api/
+      main.py
+      security.py
+  frontend/
     app/
-      api/chat/route.ts     # Proxy route ke FastAPI
+      api/chat/route.ts
     components/
     lib/
     types/
-  web_api/
-    main.py                 # FastAPI entrypoint
-    security.py             # In-memory guard (rate limit + daily cap)
-  src/
-    rag_service.py          # Orkestrasi retriever + generator
-    retriever.py
-    generator.py
-    embed.py
-    ingest.py
-  config/
-    settings.py             # Konfigurasi model, API, security, path
+  scripts/
+    cli.py
+    reingest.py
+  docs/
+    CODE_DOCUMENTATION.md
+    WEB_UI_DEPLOYMENT_PLAN.md
+  experiments/
   data/
     processed/
     vector_store/chroma_db/
-  app.py                    # CLI mode
-  reingest.py               # Rebuild vector store
   requirements.txt
 ```
 
-## Prerequisites
+## Prasyarat
 
 - Python 3.11+
 - Node.js 20+
@@ -52,22 +45,20 @@ RAG/
 
 ## Setup
 
-### 1. Install Python dependencies
+1. Install dependency backend:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Install Frontend dependencies
+2. Install dependency frontend:
 
 ```bash
 cd frontend
 npm install
 ```
 
-### 3. Konfigurasi environment backend (`.env` di root)
-
-Contoh:
+3. Buat `.env` di root proyek:
 
 ```env
 GROQ_API_KEY=your_groq_api_key
@@ -79,59 +70,52 @@ DAILY_REQUEST_LIMIT_PER_IP=300
 ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 ```
 
-### 4. Konfigurasi environment frontend (`frontend/.env.local`)
-
-Bisa salin dari `frontend/.env.local.example`.
+4. Buat `frontend/.env.local` (bisa copy dari `frontend/.env.local.example`):
 
 ```env
 BACKEND_API_URL=http://127.0.0.1:8000/api/chat
 BACKEND_API_TOKEN=your_strong_token
 ```
 
-`BACKEND_API_TOKEN` harus sama dengan `API_ACCESS_TOKEN` jika backend token protection diaktifkan.
+Catatan: jika `API_ACCESS_TOKEN` di backend diisi, `BACKEND_API_TOKEN` harus sama.
 
-## Menjalankan Aplikasi (Web)
+## Menjalankan Aplikasi Web
 
-Jalankan backend FastAPI:
+1. Jalankan backend FastAPI dari root:
 
 ```bash
-uvicorn web_api.main:app --reload
+uvicorn backend.web_api.main:app --reload
 ```
 
-Jalankan frontend Next.js (terminal terpisah):
+2. Jalankan frontend (terminal lain):
 
 ```bash
 cd frontend
 npm run dev
 ```
 
-Lalu buka: `http://localhost:3000`
+3. Buka `http://localhost:3000`.
 
-## Menjalankan Aplikasi (CLI)
+## Menjalankan Mode CLI
 
 ```bash
-python app.py
+python scripts/cli.py
 ```
 
-## API Endpoints
+## Rebuild Vector Store
 
-### `GET /health`
+Jika data di `data/processed` berubah:
 
-Status kesiapan service backend.
-
-Contoh response:
-
-```json
-{
-  "status": "ok",
-  "service_ready": true,
-  "error": null
-}
+```bash
+python scripts/reingest.py
 ```
 
-### `POST /api/chat`
+## API Endpoint
 
-Request:
+- `GET /health` untuk status service.
+- `POST /api/chat` untuk query RAG.
+
+Contoh payload:
 
 ```json
 {
@@ -139,47 +123,18 @@ Request:
 }
 ```
 
-Response:
+## Security Saat Ini
 
-```json
-{
-  "answer": "Rekomendasi ...",
-  "sources": [
-    { "nama": "Nama Coffee Shop", "lokasi": "Sleman" }
-  ]
-}
-```
-
-## Security dan Usage Guard
-
-Backend saat ini sudah memiliki:
-- Optional bearer token auth (`API_ACCESS_TOKEN`).
+- Optional bearer token (`API_ACCESS_TOKEN`).
 - Rate limit per IP (`RATE_LIMIT_PER_MINUTE`).
 - Daily cap per IP (`DAILY_REQUEST_LIMIT_PER_IP`).
-- Security headers (`X-Frame-Options`, `X-Content-Type-Options`, dll).
-- CORS origin whitelist (`ALLOWED_ORIGINS`).
+- CORS whitelist (`ALLOWED_ORIGINS`).
+- Security headers di middleware FastAPI.
 
-Catatan:
-- Guard saat ini berbasis in-memory (`web_api/security.py`) dan cocok untuk single instance.
-- Untuk multi-instance production, ganti ke shared store (misalnya Redis).
+Catatan: limiter masih in-memory (`backend/web_api/security.py`), cocok untuk single instance.
 
-## Rebuild Vector Store
-
-Jika data processed berubah:
-
-```bash
-python reingest.py
-```
-
-## Deployment Rekomendasi
+## Deployment Ringkas
 
 - Frontend: Vercel.
-- Backend FastAPI: Render / Railway / Fly.io (non-serverless lebih aman untuk workload RAG + storage).
-- Simpan `GROQ_API_KEY` dan token security via environment variables platform deploy.
-- Gunakan persistent volume jika tetap memakai ChromaDB lokal.
-
-## Catatan Tambahan
-
-- Model embedding akan diunduh saat first run jika belum ada cache.
-- Folder `data/vector_store/` dan `.env` sebaiknya tidak di-track git.
-- Terdapat deprecation warning untuk class Chroma dari LangChain; ke depan disarankan migrasi ke `langchain-chroma`.
+- Backend: Render / Railway / Fly.io.
+- Gunakan persistent volume jika tetap menyimpan ChromaDB secara lokal.

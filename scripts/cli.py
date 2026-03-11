@@ -1,10 +1,16 @@
 import os
 from dotenv import load_dotenv
-load_dotenv() 
 
 import sys
 import logging
-from src.rag_service import RAGService
+from pathlib import Path
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+load_dotenv(ROOT_DIR / ".env")
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+from backend.src.rag_service import RAGService
 
 import warnings
 
