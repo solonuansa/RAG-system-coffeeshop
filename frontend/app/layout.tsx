@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Coffee Shop RAG",
+  title: "CoffeeMate",
   description: "Frontend chat untuk Coffee Shop RAG",
 };
 
