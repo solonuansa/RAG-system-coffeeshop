@@ -12,6 +12,10 @@ on:
       - ".github/workflows/deploy-backend-vps.yml"
   workflow_dispatch:
 
+concurrency:
+  group: deploy-backend-vps
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -28,17 +32,18 @@ jobs:
       - name: Add VPS host key
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
+          ssh-keyscan -p "${{ secrets.VPS_SSH_PORT }}" -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
 
       - name: Rsync backend files only
         run: |
           rsync -az --delete \
+            -e "ssh -p ${{ secrets.VPS_SSH_PORT }}" \
             --filter='merge deploy/rsync-backend.filter' \
             ./ "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${{ secrets.VPS_APP_DIR }}/"
 
       - name: Install deps and restart service
         run: |
-          ssh "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" << 'EOF'
+          ssh -p "${{ secrets.VPS_SSH_PORT }}" "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" << 'EOF'
           set -e
 
           APP_DIR="${{ secrets.VPS_APP_DIR }}"
@@ -52,5 +57,15 @@ jobs:
 
           sudo systemctl daemon-reload
           sudo systemctl restart coffeemate
-          sudo systemctl --no-pager --full status coffeemate || true
+          sudo systemctl --no-pager --full status coffeemate
+
+          for i in 1 2 3 4 5; do
+            if curl -fsS "http://127.0.0.1:8000/health" > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "Health check failed: /health is not ready"
+          exit 1
           EOF
