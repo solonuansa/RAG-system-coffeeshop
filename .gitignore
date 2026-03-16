@@ -55,3 +55,5 @@ data/processed/lda_categorized_posts.csv
 # Keep only core code documentation public
 docs/*
 !docs/CODE_DOCUMENTATION.md
+!docs/assets/
+!docs/assets/**
