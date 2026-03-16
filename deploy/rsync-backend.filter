@@ -1,0 +1,11 @@
+# Include only backend runtime files
++ /backend/***
++ /scripts/***
++ /deploy/***
++ /requirements.txt
++ /data/
++ /data/processed/
++ /data/processed/extracted_data_sahabatai.csv
+
+# Exclude everything else
+- /***

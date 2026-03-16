@@ -1,0 +1,15 @@
+[Unit]
+Description=CoffeeMate Backend (FastAPI)
+After=network.target
+
+[Service]
+User=coffeemate
+Group=www-data
+WorkingDirectory=/opt/coffeemate/app
+EnvironmentFile=/opt/coffeemate/.env
+ExecStart=/opt/coffeemate/venv/bin/uvicorn backend.web_api.main:app --host 127.0.0.1 --port 8000 --workers 1
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -45,3 +45,13 @@ data/vector_store/
 # Instagrapi session (can contain auth cookies/tokens)
 experiments/instagrapi/session.json
 experiments/instagrapi/account_manager.py
+
+# Keep repo focused on deployable runtime
+experiments/
+data/raw/
+data/processed/preprocessed_posts.csv
+data/processed/lda_categorized_posts.csv
+
+# Keep only core code documentation public
+docs/*
+!docs/CODE_DOCUMENTATION.md
