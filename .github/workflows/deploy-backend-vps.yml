@@ -52,8 +52,8 @@ jobs:
 
       - name: Install deps and restart service
         run: |
-          ssh -p "${{ secrets.VPS_SSH_PORT }}" "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" << 'EOF'
-          set -e
+          ssh -p "${{ secrets.VPS_SSH_PORT }}" "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" 'bash -s' << 'EOF'
+          set -euo pipefail
 
           APP_DIR="${{ secrets.VPS_APP_DIR }}"
           VENV_DIR="${{ secrets.VPS_VENV_DIR }}"
@@ -75,10 +75,11 @@ jobs:
             --retry-connrefused \
             "http://127.0.0.1:8000/health" > /dev/null; then
             echo "Backend is healthy."
-            exit 0
+          else
+            echo "Health check failed: /health is not ready"
+            sudo journalctl -u coffeemate -n 50 --no-pager || true
+            exit 1
           fi
 
-          echo "Health check failed: /health is not ready"
-          sudo journalctl -u coffeemate -n 50 --no-pager || true
-          exit 1
+          echo "Deploy completed successfully."
           EOF
