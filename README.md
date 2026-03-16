@@ -1,57 +1,73 @@
-﻿# CoffeeMate RAG System
+# CoffeeMate RAG System
 
-Sistem tanya-jawab dan rekomendasi coffee shop berbasis RAG (Retrieval-Augmented Generation) untuk wilayah Yogyakarta. Proyek ini menggabungkan pencarian dokumen terstruktur dari data Instagram dengan generasi jawaban menggunakan LLM. Tujuannya memberikan rekomendasi tempat ngopi yang sesuai dengan preferensi pengguna, berdasarkan data aktual dari media sosial. Data yang digunakan berasal dari scraping akun Instagram [@referensikopi](https://www.instagram.com/referensikopi/).
+Sistem tanya-jawab dan rekomendasi coffee shop berbasis RAG (Retrieval-Augmented Generation) untuk wilayah Yogyakarta, menggunakan data Instagram sebagai basis pengetahuan.
 
-## Live Demo
+> Data source utama: scraping akun Instagram [@referensikopi](https://www.instagram.com/referensikopi/).
 
-- Production Web UI: https://mycoffeemate.vercel.app/
+## Quick Links
+
+| Item | Link |
+| --- | --- |
+| Live Web UI | https://mycoffeemate.vercel.app/ |
+| Dokumentasi Kode | `docs/CODE_DOCUMENTATION.md` |
+| Deployment Plan | `docs/WEB_UI_DEPLOYMENT_PLAN.md` |
+| Migrasi Backend VPS | `docs/VPS_BACKEND_MIGRATION.md` |
 
 ## Web UI Preview
 
-![Home](docs/assets/web-ui/rag-coffeeshop.png)
+![CoffeeMate Web UI](docs/assets/web-ui/rag-coffeeshop.png)
 
-## Apa yang Diselesaikan Proyek Ini
+## Ringkasan Produk
 
-Pengguna dapat bertanya seperti:
+Pengguna dapat bertanya dengan bahasa natural, misalnya:
 - "Rekomendasi coffee shop untuk WFC di Sleman"
 - "Tempat dengan suasana tenang dan menu kopi susu"
 
-Lalu sistem akan:
+Sistem akan:
 1. Mengambil dokumen paling relevan dari vector store.
-2. Menyusun konteks dari metadata dan deskripsi tempat.
-3. Menghasilkan jawaban terformat dengan sumber asal data.
+2. Menyusun konteks berbasis metadata dan deskripsi tempat.
+3. Menghasilkan jawaban dengan sumber yang bisa ditelusuri.
 
 ## Fitur Utama
 
-- Pipeline RAG end-to-end: retrieval + generation.
-- API backend FastAPI siap dipakai frontend.
-- Web UI berbasis Next.js dengan server-side proxy ke backend (`/api/chat`).
-- Mode CLI untuk query langsung tanpa UI.
-- Auto-rebuild vector store saat startup jika storage kosong/tidak persisten.
-- Proteksi API:
-  - bearer token opsional,
-  - rate limit per menit per IP,
-  - daily cap per IP (`DAILY_REQUEST_LIMIT_PER_IP`),
-  - CORS allowlist,
-  - security headers pada response.
+| Area | Fitur |
+| --- | --- |
+| Retrieval | ChromaDB + embedding Jina (`jina-embeddings-v5-text-small`) |
+| Generation | Groq LLM (`llama-3.3-70b-versatile`) |
+| Backend API | FastAPI endpoint `POST /api/chat` |
+| Frontend | Next.js App Router + server-side proxy route |
+| Runtime fallback | Auto rebuild vector store saat storage kosong |
+| Security | Bearer token opsional, rate limit per menit, daily cap per IP, CORS allowlist |
 
-## Arsitektur Singkat
+## Arsitektur Request
 
-1. Browser mengirim request ke route Next.js `frontend/app/api/chat/route.ts`.
-2. Route tersebut meneruskan request ke FastAPI (`backend/web_api/main.py`).
-3. FastAPI menjalankan validasi token + usage guard.
-4. `RAGService` mengorkestrasi `Retriever` + `Generator`.
-5. Jawaban dan daftar sumber dikembalikan ke frontend.
+```text
+Browser UI
+   |
+   v
+Next.js Route (/api/chat)
+   |
+   v
+FastAPI Backend (auth + usage guard)
+   |
+   v
+RAGService
+  |- Retriever (Chroma)
+  |- Generator (Groq)
+   |
+   v
+Answer + Sources
+```
 
 ## Stack Teknologi
 
-- Backend: FastAPI, Pydantic, LangChain, ChromaDB.
-- Retrieval/Embedding: model Jina (`jina-embeddings-v5-text-small`), data vector di Chroma.
-- Generation: Groq API (`llama-3.3-70b-versatile`).
-- Frontend: Next.js (App Router, route handler sebagai proxy backend).
-- Data processing: pandas untuk ingest CSV menjadi dokumen.
+- Backend: FastAPI, Pydantic, LangChain, ChromaDB
+- Embedding: Jina Embeddings API
+- Generation: Groq API
+- Frontend: Next.js
+- Data processing: pandas
 
-## Struktur Direktori Inti
+## Struktur Direktori
 
 ```text
 backend/
@@ -73,28 +89,40 @@ scripts/
 docs/
   CODE_DOCUMENTATION.md
   WEB_UI_DEPLOYMENT_PLAN.md
+experiments/notebooks/
+  README.md
 ```
 
-## Konfigurasi Penting
+## Konfigurasi Environment
 
-Di `.env` root:
-- `GROQ_API_KEY`: wajib untuk generation.
-- `JINA_API_KEY`: wajib untuk embedding Jina.
-- `API_ACCESS_TOKEN`: opsional, aktifkan auth bearer jika diisi.
-- `RATE_LIMIT_PER_MINUTE`: batas request per menit per IP.
-- `DAILY_REQUEST_LIMIT_PER_IP`: batas request harian per IP.
-- `ALLOWED_ORIGINS`: daftar origin frontend yang diizinkan CORS.
+### Root `.env`
 
-Di `frontend/.env.local`:
-- `BACKEND_API_URL`: URL endpoint backend `/api/chat`.
-- `BACKEND_API_TOKEN`: token backend (samakan dengan `API_ACCESS_TOKEN` jika auth diaktifkan).
+| Variable | Wajib | Keterangan |
+| --- | --- | --- |
+| `GROQ_API_KEY` | Ya | API key untuk LLM generation |
+| `JINA_API_KEY` | Ya | API key untuk embedding |
+| `API_ACCESS_TOKEN` | Tidak | Token auth backend jika ingin endpoint diproteksi |
+| `RATE_LIMIT_PER_MINUTE` | Tidak | Batas request per menit per IP |
+| `DAILY_REQUEST_LIMIT_PER_IP` | Tidak | Batas request harian per IP |
+| `ALLOWED_ORIGINS` | Tidak | Daftar origin frontend yang diizinkan |
+
+### Frontend `frontend/.env.local`
+
+| Variable | Keterangan |
+| --- | --- |
+| `BACKEND_API_URL` | URL endpoint backend `/api/chat` |
+| `BACKEND_API_TOKEN` | Isi sama dengan `API_ACCESS_TOKEN` jika auth aktif |
 
 ## API Kontrak
 
-- `GET /health`: status kesiapan service.
-- `POST /api/chat`: proses pertanyaan RAG.
+### `GET /health`
+
+Digunakan untuk cek status readiness backend.
+
+### `POST /api/chat`
 
 Request:
+
 ```json
 {
   "question": "Rekomendasikan coffee shop untuk WFC di Sleman"
@@ -102,6 +130,7 @@ Request:
 ```
 
 Response:
+
 ```json
 {
   "answer": "....",
@@ -118,12 +147,14 @@ pip install -r requirements.txt
 cd frontend && npm install
 ```
 
-Buat `.env` di root dan `frontend/.env.local`, lalu jalankan:
+Jalankan backend dan frontend:
 
 ```bash
 uvicorn backend.web_api.main:app --reload
 cd frontend && npm run dev:3010
 ```
+
+## Operasional Lokal
 
 Mode CLI:
 

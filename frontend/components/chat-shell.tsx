@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Send, User, Bot, Loader2, MapPin, RotateCcw } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -58,6 +58,7 @@ export default function ChatShell() {
   const [error, setError] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const shouldReduceMotion = useReducedMotion();
 
   const remainingChars = useMemo(
     () => MAX_QUESTION_LENGTH - question.length,
@@ -131,32 +132,37 @@ export default function ChatShell() {
   };
 
   return (
-    <div className="mx-auto flex h-screen w-full max-w-4xl flex-col">
-      {/* Premium Header */}
-      <header className="sticky top-0 z-10 flex flex-col items-center justify-center border-b border-stone-200/50 bg-white/60 px-6 py-5 shadow-sm backdrop-blur-md transition-all">
+    <div className="mx-auto flex h-screen w-full max-w-5xl flex-col">
+      <header className="sticky top-0 z-10 flex flex-col items-center justify-center border-b border-stone-200/60 bg-[color:var(--surface)]/90 px-6 py-4 backdrop-blur-md">
         <div className="flex w-full max-w-3xl items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary-accent)] text-white shadow-md">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary-accent)] text-white shadow-sm">
               <Bot size={22} className="stroke-[1.5]" />
             </div>
             <div>
               <h1 className="text-xl font-bold tracking-tight text-stone-900">
                 CoffeeMate <span className="text-stone-400 font-normal">| Jogja</span>
               </h1>
-              <p className="text-xs font-medium uppercase tracking-wider text-stone-500">
-                Coffee Shop Assistant
+              <p className="text-xs font-medium text-stone-700">
+                Asisten RAG coffee shop Yogyakarta
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={handleResetChat}
-            disabled={isLoading || messages.length === 0}
-            className="inline-flex items-center gap-1 rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs font-medium text-stone-700 transition hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <RotateCcw size={14} />
-            Reset Chat
-          </button>
+          <div className="flex items-center gap-2">
+            <span className="hidden rounded-full border border-[color:color-mix(in_oklch,var(--accent-amber)_40%,white)] bg-[color:color-mix(in_oklch,var(--accent-amber)_10%,white)] px-2.5 py-1 text-[10px] font-semibold text-stone-700 sm:inline">
+              Sumber: @referensikopi
+            </span>
+            <button
+              type="button"
+              onClick={handleResetChat}
+              disabled={isLoading || messages.length === 0}
+              className="inline-flex min-h-11 items-center gap-1 rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs font-medium text-stone-700 transition hover:bg-stone-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)] disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label="Reset chat"
+            >
+              <RotateCcw size={14} />
+              Reset Chat
+            </button>
+          </div>
         </div>
       </header>
 
@@ -165,20 +171,20 @@ export default function ChatShell() {
         <AnimatePresence mode="popLayout">
           {messages.length === 0 ? (
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex h-full flex-col items-center justify-center text-center max-w-md mx-auto"
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 10 }}
+              animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+              className="mx-auto flex h-full max-w-xl flex-col items-center justify-center text-center"
             >
-              <div className="mb-6 rounded-2xl bg-stone-100 p-6 shadow-sm border border-stone-200/60 text-stone-500">
+              <div className="mb-6 rounded-2xl border border-stone-200/70 bg-[color:var(--surface)] p-6 text-stone-600 shadow-sm">
                 <Bot size={40} className="mx-auto mb-4 opacity-50 stroke-[1.5]" />
                 <p className="text-base font-medium text-stone-800 mb-1">
                   Halo! Saya CoffeeMate.
                 </p>
                 <p className="text-sm text-stone-500">
-                  Tanyakan rekomendasi coffee shop terbaik di Yogyakarta untuk WFC, nongkrong, atau meeting.
+                  Tanyakan rekomendasi coffee shop Jogja berdasarkan kebutuhanmu, seperti WFC, suasana tenang, atau area tertentu.
                 </p>
                 <p className="mt-3 text-xs text-stone-600">
-                  Data rekomendasi berasal dari akun Instagram{" "}
+                  Jawaban disusun dari data Instagram{" "}
                   <a
                     href="https://www.instagram.com/referensikopi/"
                     target="_blank"
@@ -190,12 +196,17 @@ export default function ChatShell() {
                   .
                 </p>
               </div>
-              <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
-                {["WFC Area Sleman", "Kopi enak di Kota", "Buka 24 Jam"].map((tag) => (
+              <div className="flex w-full snap-x snap-mandatory items-center justify-start gap-2 overflow-x-auto px-1 pb-1 text-xs sm:flex-wrap sm:justify-center sm:overflow-visible">
+                {[
+                  "WFC di Sleman",
+                  "Tempat tenang untuk meeting",
+                  "Kopi susu di sekitar Kota Jogja",
+                ].map((tag) => (
                   <button
                     key={tag}
-                    onClick={() => setQuestion(`Rekomendasi coffee shop untuk ${tag}`)}
-                    className="rounded-full bg-white px-4 py-1.5 border border-stone-200 text-stone-600 shadow-sm transition-colors hover:bg-stone-50 hover:border-stone-300"
+                    onClick={() => setQuestion(`Rekomendasikan coffee shop ${tag}`)}
+                    className="min-h-11 shrink-0 snap-start rounded-full border border-stone-200 bg-white px-4 py-1.5 text-stone-700 shadow-sm transition-colors hover:border-stone-300 hover:bg-stone-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
+                    aria-label={`Gunakan contoh pertanyaan ${tag}`}
                   >
                     {tag}
                   </button>
@@ -207,9 +218,9 @@ export default function ChatShell() {
               {messages.map((message) => (
                 <motion.div
                   key={message.id}
-                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+                  initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.95, y: 10 }}
+                  animate={shouldReduceMotion ? undefined : { opacity: 1, scale: 1, y: 0 }}
+                  transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
                   className={`flex w-full ${
                     message.role === "user" ? "justify-end" : "justify-start"
                   }`}
@@ -248,10 +259,16 @@ export default function ChatShell() {
                           {message.sources.map((source, index) => (
                             <motion.div 
                               key={`${message.id}-${source.nama}-${index}`}
-                              initial={{ opacity: 0, x: -5 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: 0.2 + (index * 0.1) }}
-                              className="group/card flex items-start gap-2 max-w-full rounded-xl bg-white/80 p-2.5 text-xs shadow-sm border border-stone-200 backdrop-blur-sm transition-all hover:bg-white hover:shadow-md hover:border-stone-300 relative cursor-default"
+                              initial={shouldReduceMotion ? false : { opacity: 0, x: -5 }}
+                              animate={shouldReduceMotion ? undefined : { opacity: 1, x: 0 }}
+                              transition={shouldReduceMotion ? { duration: 0 } : { delay: 0.18 + (index * 0.08) }}
+                              className={`group/card flex max-w-full cursor-default items-start gap-2 rounded-xl border bg-[color:var(--surface)] p-2.5 text-xs shadow-sm transition-all hover:bg-white ${
+                                index % 3 === 0
+                                  ? "border-[color:color-mix(in_oklch,var(--accent-amber)_35%,white)]"
+                                  : index % 3 === 1
+                                    ? "border-[color:color-mix(in_oklch,var(--accent-leaf)_35%,white)]"
+                                    : "border-[color:color-mix(in_oklch,var(--accent-berry)_30%,white)]"
+                              }`}
                               title={source.lokasi}
                             >
                               <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-stone-100 text-stone-500">
@@ -275,8 +292,8 @@ export default function ChatShell() {
               
               {isLoading && (
                 <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={shouldReduceMotion ? false : { opacity: 0, y: 10 }}
+                  animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
                   className="flex w-full justify-start"
                 >
                   <div className="flex max-w-[85%] sm:max-w-[75%] gap-3 flex-row">
@@ -287,7 +304,7 @@ export default function ChatShell() {
                     </div>
                     <div className="rounded-2xl bg-white border border-stone-200/60 rounded-tl-sm px-5 py-3.5 shadow-sm text-stone-500 flex items-center gap-3">
                       <Loader2 size={16} className="animate-spin text-[var(--primary-accent)]" />
-                      <span className="text-sm font-medium animate-pulse">Mengetik jawaban...</span>
+                      <span className="text-sm font-medium animate-pulse">Mencari referensi yang relevan...</span>
                     </div>
                   </div>
                 </motion.div>
@@ -298,8 +315,7 @@ export default function ChatShell() {
         </AnimatePresence>
       </main>
 
-      {/* Input Area */}
-      <div className="px-4 pt-3 pb-6 sm:px-6">
+      <div className="sticky bottom-0 border-t border-stone-200/70 bg-[color:var(--surface)]/95 px-4 pb-[calc(env(safe-area-inset-bottom)+0.8rem)] pt-3 backdrop-blur-md sm:static sm:border-t-0 sm:bg-transparent sm:px-6 sm:pb-6 sm:pt-3">
         <form
           onSubmit={onSubmit}
           className="mx-auto flex max-w-3xl flex-col gap-2"
@@ -321,9 +337,10 @@ export default function ChatShell() {
               onChange={(event) => setQuestion(event.target.value)}
               onKeyDown={handleKeyDown}
               rows={question.split("\n").length > 1 ? Math.min(question.split("\n").length, 5) : 1}
-              className="max-h-32 min-h-[44px] w-full resize-none rounded-xl border border-stone-300 bg-[var(--background)] px-3 py-3 text-[0.9375rem] text-stone-800 outline-none placeholder:text-stone-400 leading-relaxed transition-colors focus:border-stone-500 scrollbar-thin scrollbar-thumb-stone-200"
-              placeholder="Tanya rekomendasi (Shift+Enter u/ baris baru)"
+              className="max-h-32 min-h-[44px] w-full resize-none rounded-xl border border-stone-300 bg-[var(--background)] px-3 py-3 text-[0.9375rem] leading-relaxed text-stone-800 outline-none placeholder:text-stone-500 transition-colors focus:border-stone-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)] scrollbar-thin scrollbar-thumb-stone-200"
+              placeholder="Contoh: rekomendasi coffee shop untuk WFC di Sleman"
               disabled={isLoading}
+              aria-label="Pertanyaan untuk CoffeeMate"
             />
             <div className="shrink-0 flex items-center gap-2 pb-1 pr-1">
               <span
@@ -338,7 +355,8 @@ export default function ChatShell() {
               <button
                 type="submit"
                 disabled={isLoading || !question.trim() || remainingChars < 0}
-                className="group flex h-10 w-10 sm:h-auto sm:w-auto sm:px-4 sm:py-2.5 items-center justify-center rounded-xl bg-[var(--primary-accent)] text-white shadow-md transition-all hover:bg-stone-800 disabled:cursor-not-allowed disabled:bg-stone-300 disabled:shadow-none active:scale-95"
+                className="group flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--primary-accent)] text-white shadow-md transition-all hover:bg-stone-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)] active:scale-95 disabled:cursor-not-allowed disabled:bg-stone-300 disabled:shadow-none sm:h-auto sm:w-auto sm:px-4 sm:py-2.5"
+                aria-label="Kirim pertanyaan"
               >
                 {isLoading ? (
                   <Loader2 size={18} className="animate-spin text-white sm:mr-0" />

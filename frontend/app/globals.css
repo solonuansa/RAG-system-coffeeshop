@@ -1,9 +1,15 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fdfbf7;
-  --foreground: #1c1917;
-  --primary-accent: #0f172a; /* Slate 900 / Navy feel */
+  --background: oklch(0.97 0.015 70);
+  --foreground: oklch(0.23 0.02 65);
+  --surface: oklch(0.985 0.01 75);
+  --surface-strong: oklch(0.95 0.02 72);
+  --primary-accent: oklch(0.32 0.04 62);
+  --accent-amber: oklch(0.72 0.13 72);
+  --accent-leaf: oklch(0.7 0.11 145);
+  --accent-berry: oklch(0.67 0.09 25);
+  --focus-ring: color-mix(in oklch, var(--accent-amber) 70%, white);
 }
 
 @theme inline {
@@ -15,14 +21,19 @@
 
 body {
   background:
-    radial-gradient(100% 100% at 50% 0%, #fffbf2 0%, transparent 100%),
-    radial-gradient(100% 100% at 0% 100%, #fef3e5 0%, transparent 100%),
-    radial-gradient(100% 100% at 100% 100%, #f6ebe1 0%, transparent 100%),
+    radial-gradient(90% 110% at 50% 0%, oklch(0.99 0.015 78) 0%, transparent 100%),
+    radial-gradient(95% 100% at 0% 100%, oklch(0.94 0.03 76) 0%, transparent 100%),
+    radial-gradient(90% 100% at 100% 100%, oklch(0.93 0.028 48) 0%, transparent 100%),
     var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), sans-serif;
   min-height: 100vh;
   background-attachment: fixed;
+}
+
+::selection {
+  background: color-mix(in oklch, var(--accent-amber) 40%, white);
+  color: var(--foreground);
 }
 
 /* Custom minimal scrollbar */
@@ -39,4 +50,13 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #a8a29e;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
 }
